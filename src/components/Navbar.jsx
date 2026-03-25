@@ -15,10 +15,12 @@ export default function Navbar() {
               ST
             </div>
             <div>
+              <Link to="/" className="hover:text-purple-700 py-2">
               <div className="text-lg font-semibold">Sadia Therapy</div>
               <div className="text-xs text-gray-500">
                 Solution-Focused Hypnotherapy
               </div>
+              </Link>
             </div>
           </div>
 
