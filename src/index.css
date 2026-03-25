@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand Colors */
+:root{
+  --brand-purple: #5b1462;
+  --brand-accent: #8b2a7a;
+}
+
+/* Global Font */
+body {
+  font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Serif Heading Font */
+.heading-serif {
+  font-family: "Playfair Display", serif;
+}
+
+/* Hero Helpers */
+.hero-heading-box {
+  background: rgba(91,20,98,0.95);
+}
+
+.hero-sub-box {
+  background: rgba(12,74,110,0.6);
+}
+
+/* Slider Layout */
+.hero-viewport {
+  height: 520px;
+}
+
+.video-slide {
+  transition: opacity 0.9s ease;
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+}
+
+.video-slide[data-active="true"] {
+  opacity: 1;
+  z-index: 10;
+}
+
+/* Overlay Animation */
+.overlay-panel {
+  transform: translateY(18px);
+  opacity: 0;
+  transition: transform 700ms cubic-bezier(.2,.9,.3,1), opacity 700ms;
+}
+
+.video-slide[data-active="true"] .overlay-panel {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Label Boxes */
+.label-box {
+  background: var(--brand-purple);
+  color: white;
+  display: inline-block;
+  padding: .5rem 1rem;
+  box-shadow: 0 2px 0 rgba(0,0,0,.08);
+}
+
+.sub-box {
+  background: rgba(10,10,12,0.45);
+  color: #f1f5f9;
+  display: inline-block;
+  padding: .4rem .8rem;
+  border-radius: 4px;
+}
+
+/* Video Cover */
+.video-cover {
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+}
