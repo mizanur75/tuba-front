@@ -14,5 +14,5 @@ export const fetchAPI = async (endpoint) => {
 
 // Specific APIs
 export const getVideos = () => fetchAPI("/videos");
-export const getPackages = () => fetchAPI("/packages");
+export const getAbout = () => fetchAPI("/about");
 // add more here later
