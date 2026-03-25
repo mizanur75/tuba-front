@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAbout } from "../api/api";
+import { getAbout, baseURL } from "../api/api";
 
 export default function About() {
   const [aboutData, setAboutData] = useState(null);
@@ -14,8 +14,6 @@ export default function About() {
     });
   }, []);
 
-  // Base URL for images
-  const baseURL = "http://127.0.0.1:8000/";
 
   return (
     <>

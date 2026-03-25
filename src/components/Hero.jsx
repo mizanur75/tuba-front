@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getVideos } from "../api/api";
+import { getVideos, baseURL } from "../api/api";
 
 export default function Hero() {
   const [videoData, setVideoData] = useState([]);
@@ -28,7 +28,6 @@ export default function Hero() {
   const currentSlide = videoData[current] || {};
 
   // ✅ Video full URL
-  const baseURL = "http://127.0.0.1:8000/";
   const videoUrl = currentSlide.video
     ? baseURL + currentSlide.video
     : "https://www.w3schools.com/html/mov_bbb.mp4";

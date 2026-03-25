@@ -12,7 +12,10 @@ export const fetchAPI = async (endpoint) => {
   }
 };
 
+
+export const baseURL = "http://127.0.0.1:8000/";
 // Specific APIs
 export const getVideos = () => fetchAPI("/videos");
 export const getAbout = () => fetchAPI("/about");
+export const getSteps = () => fetchAPI("/steps");
 // add more here later
