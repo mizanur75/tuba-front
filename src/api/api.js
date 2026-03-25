@@ -12,6 +12,27 @@ export const fetchAPI = async (endpoint) => {
   }
 };
 
+// ✅ Create Appointment (FIXED)
+export const createAppointment = async (data) => {
+  try {
+    const res = await fetch(`${BASE_URL}/appointments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    console.log(res);
+    
+
+    if (!res.ok) throw new Error("Failed to create appointment");
+
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 
 export const baseURL = "http://127.0.0.1:8000/";
 // Specific APIs

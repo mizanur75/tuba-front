@@ -1,22 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getPackages, createAppointment } from "../api/api";
 
 export default function Appointment() {
 
+  const [packages, setPackages] = useState([]);
+
   const [formData, setFormData] = useState({
     name: "",
+    phone: "",
     email: "",
     date: "",
     time: "",
-    packageId: ""
+    packageId: "",
+    comments: ""
   });
 
-  const packages = [
-    { id: 1, name: "Relaxation Session (£40)" },
-    { id: 2, name: "Single Session (£120)" },
-    { id: 3, name: "Three Session Package (£300)" },
-    { id: 4, name: "Five Session Package (£500)" }
-  ];
+  // ✅ Fetch packages from API
+  useEffect(() => {
+    getPackages().then((data) => {
+      const active = data.filter((item) => item.status === "1");
+      setPackages(active);
+    });
+  }, []);
 
+  // Handle input change
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -24,7 +31,8 @@ export default function Appointment() {
     });
   };
 
-  const handleSubmit = (e) => {
+  // Submit form
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
@@ -32,23 +40,32 @@ export default function Appointment() {
       email: formData.email,
       date: formData.date,
       time: formData.time,
-      package_id: formData.packageId // only sending ID
+      phone: formData.phone || null,
+      comments: formData.comments || null,
+      package_id: formData.packageId
     };
 
-    console.log("Send to backend:", payload);
+    try {
+      const res = await createAppointment(payload);
+      console.log("Response:", res);
 
-    // Example API call
-    /*
-    fetch("http://localhost:5000/api/appointment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-    */
+      alert("Appointment booked successfully!");
 
-    alert("Appointment request sent!");
+      // Reset form
+      setFormData({
+        name: "",
+        phone: "",
+        email: "",
+        date: "",
+        time: "",
+        packageId: "",
+        comments: ""
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong!");
+    }
   };
 
   return (
@@ -83,7 +100,7 @@ export default function Appointment() {
             className="w-full p-3 border rounded"
           />
 
-          {/* Package Dropdown */}
+          {/* Package Dropdown (Dynamic) */}
           <select
             required
             name="packageId"
@@ -92,35 +109,37 @@ export default function Appointment() {
             className="w-full p-3 border rounded"
           >
             <option value="">Select Package</option>
+
             {packages.map((pkg) => (
               <option key={pkg.id} value={pkg.id}>
-                {pkg.name}
+                {pkg.name} (£{pkg.price})
               </option>
             ))}
+
           </select>
 
-          {/* Date & Time Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
+          {/* Date & Time */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <input
-                required
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="w-full p-3 border rounded"
+              required
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="w-full p-3 border rounded"
             />
 
             <input
-                required
-                type="time"
-                name="time"
-                value={formData.time}
-                onChange={handleChange}
-                className="w-full p-3 border rounded"
+              required
+              type="time"
+              name="time"
+              value={formData.time}
+              onChange={handleChange}
+              className="w-full p-3 border rounded"
             />
 
-            </div>
+          </div>
 
           {/* Submit */}
           <button
