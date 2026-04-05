@@ -29,7 +29,7 @@ export default function Hero() {
 
   // ✅ Video full URL
   const videoUrl = currentSlide.video
-    ? baseURL + currentSlide.video
+    ? baseURL+"storage/" + currentSlide.video
     : "https://www.w3schools.com/html/mov_bbb.mp4";
 
   return (

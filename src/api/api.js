@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000/api/v1";
+const BASE_URL = "https://www.app.sadiatherapy.org/api/v1";
 
 // Generic fetch function
 export const fetchAPI = async (endpoint) => {
@@ -34,7 +34,7 @@ export const createAppointment = async (data) => {
 };
 
 
-export const baseURL = "http://127.0.0.1:8000/";
+export const baseURL = "https://www.app.sadiatherapy.org/";
 // Specific APIs
 export const getVideos = () => fetchAPI("/videos");
 export const getAbout = () => fetchAPI("/about");

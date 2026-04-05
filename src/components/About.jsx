@@ -26,7 +26,7 @@ export default function About() {
             <img
               src={
                 aboutData?.image1
-                  ? baseURL + aboutData.image1
+                  ? baseURL+"storage/" + aboutData.image1
                   : "https://via.placeholder.com/500"
               }
               alt="about"
@@ -37,17 +37,17 @@ export default function About() {
             <div className="flex flex-wrap items-center gap-3">
               <img
                 src="https://sadiatherapy.org.primex-bd.com/static/media/cf.396cc26879090842d511.png"
-                className="h-12"
+                className="h-24"
                 alt="badge"
               />
               <img
                 src="https://sadiatherapy.org.primex-bd.com/static/media/cp.19bad03edc1bd9b9a14f.png"
-                className="h-12"
+                className="h-24"
                 alt="badge"
               />
               <img
                 src="https://sadiatherapy.org.primex-bd.com/static/media/af.6ec285c7572ec9dfbd35.png"
-                className="h-12"
+                className="h-24"
                 alt="badge"
               />
             </div>
@@ -59,7 +59,7 @@ export default function About() {
               {aboutData?.title1 || "Know Your Hero"}
             </h2>
 
-            <p className="mt-4 text-gray-700 leading-relaxed">
+            <p className="mt-2 text-sm sm:text-base text-justify text-gray-500 leading-relaxed">
               {aboutData?.description1 || "Loading..."}
             </p>
           </div>
@@ -77,7 +77,7 @@ export default function About() {
               {aboutData?.title2 || "Explore My Therapy"}
             </h2>
 
-            <p className="mt-3 text-gray-700">
+            <p className="mt-2 text-sm sm:text-base text-justify text-gray-500 leading-relaxed">
               {aboutData?.description2 || "Loading..."}
             </p>
 
@@ -96,7 +96,7 @@ export default function About() {
             <img
               src={
                 aboutData?.image2
-                  ? baseURL + aboutData.image2
+                  ? baseURL+"storage/" + aboutData.image2
                   : "https://via.placeholder.com/500"
               }
               alt="about"
