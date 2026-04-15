@@ -36,17 +36,17 @@ export default function About() {
             {/* badges (static optional) */}
             <div className="flex flex-wrap items-center gap-3">
               <img
-                src="https://sadiatherapy.org.primex-bd.com/static/media/cf.396cc26879090842d511.png"
+                src="https://sadiatherapy.org/cf.396cc26879090842d511.png"
                 className="h-24"
                 alt="badge"
               />
               <img
-                src="https://sadiatherapy.org.primex-bd.com/static/media/cp.19bad03edc1bd9b9a14f.png"
+                src="https://sadiatherapy.org/cp.19bad03edc1bd9b9a14f.png"
                 className="h-24"
                 alt="badge"
               />
               <img
-                src="https://sadiatherapy.org.primex-bd.com/static/media/af.6ec285c7572ec9dfbd35.png"
+                src="https://sadiatherapy.org/af.6ec285c7572ec9dfbd35.png"
                 className="h-24"
                 alt="badge"
               />
