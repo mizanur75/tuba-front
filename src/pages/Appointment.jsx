@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { getPackages, createAppointment } from "../api/api";
+import {
+  getPackages,
+  createAppointment,
+  fetchAPI
+} from "../api/api";
 
 export default function Appointment() {
-
   const [packages, setPackages] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,13 +22,64 @@ export default function Appointment() {
     comments: ""
   });
 
-  // ✅ Fetch packages from API
+  // ✅ Fetch packages
   useEffect(() => {
     getPackages().then((data) => {
       const active = data.filter((item) => item.status === "1");
       setPackages(active);
     });
   }, []);
+
+  // ✅ Fetch booked slots when date changes
+  useEffect(() => {
+    if (formData.date) {
+      fetchAPI(`/appointments?date=${formData.date}`).then((data) => {
+
+        // 🔥 FIX: convert 16:00:00 → 16:00
+        const times = data.map((item) => item.time.slice(0, 5));
+
+        setBookedSlots(times);
+
+        // reset selected time
+        setFormData((prev) => ({ ...prev, time: "" }));
+      });
+    }
+  }, [formData.date]);
+
+  // ✅ Generate 15-min slots
+  const generateTimeSlots = () => {
+    const slots = [];
+    let start = 16 * 60;
+    let end = 18 * 60;
+
+    for (let i = start; i <= end; i += 15) {
+      const h = String(Math.floor(i / 60)).padStart(2, "0");
+      const m = String(i % 60).padStart(2, "0");
+      slots.push(`${h}:${m}`);
+    }
+
+    return slots;
+  };
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const isToday = formData.date === today;
+
+  const now = new Date();
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+    now.getMinutes()
+  ).padStart(2, "0")}`;
+
+  // ✅ Filter available slots
+  const availableSlots = generateTimeSlots().filter((slot) => {
+    const isBooked = bookedSlots.includes(slot);
+
+    if (isToday) {
+      return !isBooked && slot > currentTime;
+    }
+
+    return !isBooked;
+  });
 
   // Handle input change
   const handleChange = (e) => {
@@ -48,7 +103,7 @@ export default function Appointment() {
       time: formData.time,
       phone: formData.phone || null,
       comments: formData.comments || null,
-      package_id: formData.packageId
+      package_id: Number(formData.packageId)
     };
 
     try {
@@ -57,14 +112,13 @@ export default function Appointment() {
 
       alert("Appointment booked successfully!");
 
-      // Reset form
       setFormData({
         name: "",
         sex: "",
         age: "",
+        address: "",
         phone: "",
         email: "",
-        address: "",
         date: "",
         time: "",
         packageId: "",
@@ -86,9 +140,10 @@ export default function Appointment() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* Name / Sex / Age */}
           <div className="grid grid-cols-12 gap-4">
 
-            {/* Name - 6 columns */}
             <input
               required
               type="text"
@@ -99,7 +154,6 @@ export default function Appointment() {
               className="col-span-12 md:col-span-6 p-3 border rounded"
             />
 
-            {/* Sex - 3 columns */}
             <select
               required
               name="sex"
@@ -113,7 +167,6 @@ export default function Appointment() {
               <option value="Third Gender">Third Gender</option>
             </select>
 
-            {/* Age - 3 columns */}
             <input
               required
               type="number"
@@ -125,56 +178,62 @@ export default function Appointment() {
             />
 
           </div>
+
+          {/* Email / Phone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Email */}
-          <input
-            required
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full p-3 border rounded"
-          />
-          <input
-            required
-            type="text"
-            name="phone"
-            placeholder="Phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full p-3 border rounded"
-          />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <input
-            required
-            type="text"
-            name="address"
-            placeholder="Address"
-            value={formData.address}
-            onChange={handleChange}
-            className="w-full p-3 border rounded"
-          />
-          {/* Package Dropdown (Dynamic) */}
-          <select
-            required
-            name="packageId"
-            value={formData.packageId}
-            onChange={handleChange}
-            className="w-full p-3 border rounded"
-          >
-            <option value="">Select Package</option>
+              required
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-3 border rounded"
+            />
 
-            {packages.map((pkg) => (
-              <option key={pkg.id} value={pkg.id}>
-                {pkg.name} (£{pkg.price})
-              </option>
-            ))}
+            <input
+              type="text"
+              name="phone"
+              placeholder="Phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full p-3 border rounded"
+            />
 
-          </select>
-        </div>
-          {/* Date & Time */}
+          </div>
+
+          {/* Address + Package */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <input
+              required
+              type="text"
+              name="address"
+              placeholder="Address"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full p-3 border rounded"
+            />
+
+            <select
+              required
+              name="packageId"
+              value={formData.packageId}
+              onChange={handleChange}
+              className="w-full p-3 border rounded"
+            >
+              <option value="">Select Package</option>
+              {packages.map((pkg) => (
+                <option key={pkg.id} value={pkg.id}>
+                  {pkg.name} (£{pkg.price})
+                </option>
+              ))}
+            </select>
+
+          </div>
+
+          {/* Date + Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <input
@@ -186,21 +245,32 @@ export default function Appointment() {
               className="w-full p-3 border rounded"
             />
 
-            <input
+            <select
               required
-              type="time"
               name="time"
               value={formData.time}
               onChange={handleChange}
               className="w-full p-3 border rounded"
-            />
+            >
+              <option value="">Select Time</option>
+
+              {availableSlots.length === 0 ? (
+                <option disabled>No slots available</option>
+              ) : (
+                availableSlots.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {slot}
+                  </option>
+                ))
+              )}
+            </select>
 
           </div>
+
+          {/* Comments */}
           <textarea
-            required
-            type="text"
             name="comments"
-            placeholder="Input you comments"
+            placeholder="Write your comments"
             value={formData.comments}
             onChange={handleChange}
             className="w-full p-3 border rounded"
