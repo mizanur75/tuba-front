@@ -56,7 +56,7 @@ export default function Contact() {
 
             <Link
               to="/appointment"
-              className="inline-block px-6 py-2 bg-purple-700 text-white rounded text-center hover:bg-purple-800 transition"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-md text-sm font-semibold text-center shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
               Book Appointment
             </Link>
@@ -116,7 +116,7 @@ export default function Contact() {
               <div className="sm:col-span-2 flex justify-between items-center">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800 transition"
+                  className="px-6 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-md text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
                 >
                   Send Message
                 </button>

@@ -75,7 +75,7 @@ export default function Hero() {
           <div className="pt-1 sm:pt-2">
             <Link
               to="/appointment"
-              className="inline-block bg-white text-purple-700 font-semibold px-5 py-2.5 sm:px-7 sm:py-3 md:px-8 md:py-3.5 rounded-md  text-sm sm:text-base hover:bg-gray-100 hover:scale-105 transition-all duration-300 shadow-lg"
+              className="inline-block bg-white text-purple-700 font-semibold text-center px-4 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-md text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300g"
             >
               Free Discovery Call
             </Link>

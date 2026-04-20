@@ -82,7 +82,7 @@ export default function Packages() {
                 {/* CTA Button */}
                 <Link
                   to={`/appointment?package=${item.id}`}
-                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-md text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
                 >
                   Book an Appointment
                 </Link>

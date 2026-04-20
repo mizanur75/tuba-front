@@ -84,7 +84,7 @@ export default function About() {
             <div className="mt-4">
               <Link
                 to="/appointment"
-                className="px-4 py-2 bg-purple-700 text-white rounded"
+                className="text-center px-4 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-md text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
               >
                 Free Discovery Call
               </Link>
