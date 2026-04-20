@@ -18,6 +18,27 @@ body {
   font-family: "Playfair Display", serif;
 }
 
+/* Decorative Heading Font (Cinzel) */
+.font-explore {
+  font-family: "Cinzel", serif;
+}
+
+/* Nav link hover underline animation */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(to right, #7e22ce, #db2777);
+  transition: width 0.3s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
 /* Hero Helpers */
 .hero-heading-box {
   background: rgba(91,20,98,0.95);
@@ -29,7 +50,8 @@ body {
 
 /* Slider Layout */
 .hero-viewport {
-  height: 520px;
+  height: 100vh;
+  min-height: 600px;
 }
 
 .video-slide {

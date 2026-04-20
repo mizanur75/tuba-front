@@ -8,7 +8,6 @@ export default function Packages() {
   useEffect(() => {
     getPackages()
       .then((data) => {
-        // Optional: filter active only
         const active = data.filter((item) => item.status === "1");
         setPackages(active);
       })
@@ -16,60 +15,78 @@ export default function Packages() {
   }, []);
 
   return (
-    <section id="packages" className="max-w-6xl mx-auto px-6 py-12">
+    <section id="packages" className="max-w-6xl mx-auto px-6 py-16">
 
-      {/* Title */}
-      <h3 className="text-center text-2xl text-purple-700 font-bold">
-        Packages
-      </h3>
-
-      <p className="text-center mt-3 text-gray-600">
-        Choose a plan that suits your needs
-      </p>
+      {/* Section Header */}
+      <div className="text-center mb-12">
+        <h3 className="text-3xl md:text-4xl text-purple-700 font-bold font-explore">
+          Packages
+        </h3>
+        <div className="w-16 h-1 bg-gradient-to-r from-purple-700 to-pink-500 mx-auto mt-3 rounded-full" />
+        <p className="mt-4 text-gray-500 text-sm md:text-base max-w-md mx-auto">
+          Choose a plan that suits your needs
+        </p>
+      </div>
 
       {/* Cards */}
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${packages.length > 3 ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6`}>
 
         {packages.length === 0 ? (
-          <p className="col-span-full text-center text-gray-500">
-            Loading packages...
-          </p>
+          <div className="col-span-full flex justify-center py-12">
+            <div className="flex items-center gap-3 text-gray-400">
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              Loading packages...
+            </div>
+          </div>
         ) : (
-          packages.map((item) => (
+          packages.map((item, index) => (
             <div
               key={item.id}
-              className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition duration-300 flex flex-col h-full"
+              className={`group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${
+                index === 1 ? "border-2 border-purple-700" : "border border-gray-100"
+              }`}
             >
+              {/* Top gradient accent */}
+              <div className="h-1.5 bg-gradient-to-r from-purple-700 to-pink-500" />
 
-              <div className="flex flex-col h-full justify-between">
+              {/* Popular badge for second card */}
+              {index === 1 && (
+                <div className="absolute top-4 right-4 bg-purple-700 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+                  Popular
+                </div>
+              )}
 
-                {/* Content */}
-                <div>
-                  <div className="text-xl font-bold text-purple-700">
-                    £{item.price}
-                  </div>
+              <div className="p-6 flex flex-col flex-1">
+                {/* Package Name */}
+                <h4 className="text-lg font-bold text-gray-800 mb-3">
+                  {item.name}
+                </h4>
 
-                  <div className="mt-2 text-sm text-gray-600">
-                    {item.name}
-                  </div>
-
-                  <p className="mt-4 text-sm text-gray-700">
-                    {item.description}
-                  </p>
+                {/* Price */}
+                <div className="mb-4">
+                  <span className="text-sm text-gray-400 align-top">£</span>
+                  <span className="text-4xl font-extrabold text-purple-700">
+                    {item.price}
+                  </span>
+                  <span className="text-sm text-gray-400 ml-1">/session</span>
                 </div>
 
-                {/* Button */}
-                <div className="mt-6">
-                  <Link
-                    to="/appointment"
-                    className="inline-block px-4 py-2 bg-purple-700 text-white rounded-full text-sm hover:bg-purple-800 transition"
-                  >
-                    Free Discovery Call
-                  </Link>
-                </div>
+                {/* Description */}
+                <p className="text-sm text-gray-500 leading-relaxed flex-1 line-clamp-4">
+                  {item.description}
+                </p>
 
+                {/* Divider */}
+                <div className="border-t border-gray-100 my-5" />
+
+                {/* CTA Button */}
+                <Link
+                  to={`/appointment?package=${item.id}`}
+                  className="block w-full text-center px-4 py-3 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  Book an Appointment
+                </Link>
               </div>
-
             </div>
           ))
         )}

@@ -55,7 +55,7 @@ export default function About() {
 
           {/* RIGHT TEXT */}
           <div>
-            <h2 className="text-2xl text-purple-700 font-bold">
+            <h2 className="text-3xl md:text-4xl text-purple-700 font-bold font-explore">
               {aboutData?.title1 || "Know Your Hero"}
             </h2>
 
@@ -73,7 +73,7 @@ export default function About() {
 
           {/* LEFT TEXT */}
           <div>
-            <h2 className="text-xl text-purple-700 font-semibold">
+            <h2 className="text-3xl md:text-4xl text-purple-700 font-bold font-explore">
               {aboutData?.title2 || "Explore My Therapy"}
             </h2>
 
