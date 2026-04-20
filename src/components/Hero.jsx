@@ -53,7 +53,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
       {/* Content */}
-      <div className="absolute inset-0 flex items-center px-6 sm:px-10 md:px-16 lg:px-24">
+      <div className="absolute inset-0 flex items-center px-6 sm:px-10 md:px-16 lg:px-32 2xl:px-64">
         <div className={`w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-3xl space-y-4 sm:space-y-5 text-left transition-all duration-700 ${animate ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}>
 
           {/* Subtitle */}
