@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { loadStripe } from "@stripe/stripe-js";
 import {
   getPackages,
   createAppointment,
   fetchAPI,
   createStripeCheckoutSession
 } from "../api/api";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_LIVE || "");
 
 // Custom Calendar Component
 function Calendar({ selectedDate, onSelectDate }) {
@@ -203,6 +206,10 @@ export default function Appointment() {
   const [packages, setPackages] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [embeddedClientSecret, setEmbeddedClientSecret] = useState("");
+  const [notification, setNotification] = useState(null);
+  const checkoutRef = useRef(null);
+  const notificationTimeoutRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -216,6 +223,42 @@ export default function Appointment() {
     packageId: "",
     comments: ""
   });
+
+  const destroyEmbeddedCheckout = () => {
+    if (checkoutRef.current) {
+      checkoutRef.current.destroy();
+      checkoutRef.current = null;
+    }
+  };
+
+  const closeNotification = useCallback(() => {
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
+    }
+    setNotification(null);
+  }, []);
+
+  const showNotification = useCallback((type, title, message) => {
+    setNotification({ type, title, message });
+
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+    }
+
+    notificationTimeoutRef.current = setTimeout(() => {
+      setNotification(null);
+      notificationTimeoutRef.current = null;
+    }, 5000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Fetch packages & pre-select from URL
   useEffect(() => {
@@ -244,17 +287,36 @@ export default function Appointment() {
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     const pendingPayloadRaw = sessionStorage.getItem("pendingAppointmentPayload");
+    const processingKey = "pendingAppointmentProcessing";
 
     if (paymentStatus === "success" && pendingPayloadRaw) {
+      // Guard against duplicate inserts if this effect runs multiple times.
+      if (sessionStorage.getItem(processingKey) === "1") return;
+      sessionStorage.setItem(processingKey, "1");
+
       const createAfterPayment = async () => {
+        let parsedPayload;
+
         try {
-          const pendingPayload = JSON.parse(pendingPayloadRaw);
-          await createAppointment(pendingPayload);
+          parsedPayload = JSON.parse(pendingPayloadRaw);
+          // Remove first so repeated effect runs cannot submit twice.
           sessionStorage.removeItem("pendingAppointmentPayload");
-          alert("Payment successful! Your appointment has been booked.");
+
+          await createAppointment(parsedPayload);
+          showNotification(
+            "success",
+            "Appointment Confirmed",
+            "Payment successful. Your appointment has been booked."
+          );
         } catch (error) {
           console.error(error);
+          // Restore payload to allow retry if request failed after removal.
+          if (parsedPayload) {
+            sessionStorage.setItem("pendingAppointmentPayload", JSON.stringify(parsedPayload));
+          }
           alert("Payment succeeded, but booking failed. Please contact support.");
+        } finally {
+          sessionStorage.removeItem(processingKey);
         }
       };
 
@@ -262,9 +324,56 @@ export default function Appointment() {
     }
 
     if (paymentStatus === "cancelled" && pendingPayloadRaw) {
+      sessionStorage.removeItem("pendingAppointmentPayload");
+      sessionStorage.removeItem(processingKey);
       alert("Payment was cancelled. Your appointment was not booked.");
     }
-  }, [searchParams]);
+  }, [searchParams, showNotification]);
+
+  // Initialize Stripe Embedded Checkout inside appointment page
+  useEffect(() => {
+    if (!embeddedClientSecret) return;
+
+    let active = true;
+
+    const initEmbeddedCheckout = async () => {
+      try {
+        const stripe = await stripePromise;
+        if (!stripe) {
+          throw new Error("Stripe publishable key is missing. Set VITE_STRIPE_PUBLISHABLE_KEY_LIVE.");
+        }
+
+        const checkout = await stripe.createEmbeddedCheckoutPage({
+          clientSecret: embeddedClientSecret,
+          onComplete: () => {
+            window.location.href = `${window.location.origin}/appointment?payment=success`;
+          },
+        });
+
+        if (!active) {
+          checkout.destroy();
+          return;
+        }
+
+        checkoutRef.current = checkout;
+        checkout.mount("#embedded-checkout");
+      } catch (error) {
+        console.error(error);
+        alert(error.message || "Unable to load embedded checkout.");
+        sessionStorage.removeItem("pendingAppointmentPayload");
+        setEmbeddedClientSecret("");
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    initEmbeddedCheckout();
+
+    return () => {
+      active = false;
+      destroyEmbeddedCheckout();
+    };
+  }, [embeddedClientSecret]);
 
   // Generate 15-min slots
   const generateTimeSlots = () => {
@@ -312,6 +421,13 @@ export default function Appointment() {
     setFormData((prev) => ({ ...prev, time }));
   };
 
+  const handleCloseEmbeddedCheckout = () => {
+    destroyEmbeddedCheckout();
+    setEmbeddedClientSecret("");
+    setSubmitting(false);
+    sessionStorage.removeItem("pendingAppointmentPayload");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -330,9 +446,15 @@ export default function Appointment() {
 
     const selectedPackage = packages.find((pkg) => String(pkg.id) === String(formData.packageId));
     const packagePrice = Number(selectedPackage?.price);
+    const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_LIVE;
 
     if (!selectedPackage) {
       alert("Please select a valid package.");
+      return;
+    }
+
+    if (!publishableKey) {
+      alert("Stripe publishable key is missing. Set VITE_STRIPE_PUBLISHABLE_KEY_LIVE.");
       return;
     }
 
@@ -345,8 +467,7 @@ export default function Appointment() {
     try {
       sessionStorage.setItem("pendingAppointmentPayload", JSON.stringify(payload));
 
-      const successUrl = `${window.location.origin}/appointment?payment=success`;
-      const cancelUrl = `${window.location.origin}/appointment?payment=cancelled`;
+      const returnUrl = `${window.location.origin}/appointment?payment=success`;
 
       const session = await createStripeCheckoutSession({
         package_id: Number(formData.packageId),
@@ -354,8 +475,8 @@ export default function Appointment() {
         amount: packagePrice,
         currency: "gbp",
         customer_email: formData.email,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
+        ui_mode: "embedded_page",
+        return_url: returnUrl,
         metadata: {
           appointment_name: formData.name,
           appointment_date: formData.date,
@@ -363,27 +484,54 @@ export default function Appointment() {
         },
       });
 
-      const checkoutUrl = session?.url || session?.checkout_url;
+      const clientSecret = session?.client_secret;
 
-      if (!checkoutUrl || !/^https:\/\/checkout\.stripe\.com\//.test(checkoutUrl)) {
-        throw new Error("Checkout session created, but redirect URL is invalid.");
+      if (!clientSecret || typeof clientSecret !== "string") {
+        throw new Error("Checkout session created, but client secret is missing.");
       }
 
-      window.location.href = checkoutUrl;
+      setEmbeddedClientSecret(clientSecret);
     } catch (error) {
       console.error(error);
       sessionStorage.removeItem("pendingAppointmentPayload");
       alert(
         error.message ||
-        "Unable to start hosted checkout. Make sure backend endpoint /api/v1/checkout/session is implemented."
+        "Unable to start embedded checkout. Make sure backend endpoint /api/v1/checkout/session is implemented."
       );
-    } finally {
       setSubmitting(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-28 px-4 sm:px-6">
+      {notification && (
+        <div className="fixed top-6 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] sm:w-auto sm:max-w-md" role="status" aria-live="polite">
+          <div className="rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-2xl border border-white/20 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">{notification.title}</p>
+                <p className="text-sm text-emerald-50 mt-0.5">{notification.message}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeNotification}
+                className="text-emerald-50 hover:text-white transition-colors"
+                aria-label="Close notification"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
@@ -485,11 +633,27 @@ export default function Appointment() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting || !formData.date || !formData.time}
+            disabled={submitting || !formData.date || !formData.time || !!embeddedClientSecret}
             className="w-full py-3.5 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {submitting ? "Redirecting to payment..." : "Pay & Confirm Appointment"}
+            {submitting ? "Preparing secure checkout..." : "Pay & Confirm Appointment"}
           </button>
+
+          {embeddedClientSecret && (
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-700">Secure Checkout</h3>
+                <button
+                  type="button"
+                  onClick={handleCloseEmbeddedCheckout}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+              <div id="embedded-checkout" className="min-h-[680px]" />
+            </div>
+          )}
 
         </form>
       </div>

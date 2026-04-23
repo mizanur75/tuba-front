@@ -1,9 +1,13 @@
-const BASE_URL = "https://www.app.sadiatherapy.org/api/v1";
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://www.app.sadiatherapy.org/api/v1").replace(/\/+$/, "");
 
 // Generic fetch function
 export const fetchAPI = async (endpoint) => {
   try {
-    const res = await fetch(`${BASE_URL}${endpoint}`);
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        "Accept": "application/json",
+      },
+    });
     if (!res.ok) throw new Error("API Error");
     return await res.json();
   } catch (error) {
@@ -19,6 +23,7 @@ export const createAppointment = async (data) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
       body: JSON.stringify(data),
     });
@@ -42,6 +47,7 @@ export const createStripeCheckoutSession = async (data) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
       body: JSON.stringify(data),
     });
@@ -72,7 +78,7 @@ export const createStripeCheckoutSession = async (data) => {
 };
 
 
-export const baseURL = "https://www.app.sadiatherapy.org/";
+export const baseURL = (import.meta.env.VITE_API_ASSET_BASE_URL || "https://www.app.sadiatherapy.org/").replace(/\/?$/, "/");
 // Specific APIs
 export const getVideos = () => fetchAPI("/videos");
 export const getAbout = () => fetchAPI("/about");
