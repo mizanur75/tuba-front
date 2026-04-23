@@ -3,7 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import {
   getPackages,
   createAppointment,
-  fetchAPI
+  fetchAPI,
+  createStripeCheckoutSession
 } from "../api/api";
 
 // Custom Calendar Component
@@ -239,6 +240,32 @@ export default function Appointment() {
     }
   }, [formData.date]);
 
+  // Handle payment return from Stripe Checkout
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const pendingPayloadRaw = sessionStorage.getItem("pendingAppointmentPayload");
+
+    if (paymentStatus === "success" && pendingPayloadRaw) {
+      const createAfterPayment = async () => {
+        try {
+          const pendingPayload = JSON.parse(pendingPayloadRaw);
+          await createAppointment(pendingPayload);
+          sessionStorage.removeItem("pendingAppointmentPayload");
+          alert("Payment successful! Your appointment has been booked.");
+        } catch (error) {
+          console.error(error);
+          alert("Payment succeeded, but booking failed. Please contact support.");
+        }
+      };
+
+      createAfterPayment();
+    }
+
+    if (paymentStatus === "cancelled" && pendingPayloadRaw) {
+      alert("Payment was cancelled. Your appointment was not booked.");
+    }
+  }, [searchParams]);
+
   // Generate 15-min slots
   const generateTimeSlots = () => {
     const slots = [];
@@ -301,18 +328,55 @@ export default function Appointment() {
       package_id: Number(formData.packageId)
     };
 
+    const selectedPackage = packages.find((pkg) => String(pkg.id) === String(formData.packageId));
+    const packagePrice = Number(selectedPackage?.price);
+
+    if (!selectedPackage) {
+      alert("Please select a valid package.");
+      return;
+    }
+
+    if (!Number.isFinite(packagePrice) || packagePrice <= 0) {
+      alert("Selected package price is invalid.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const res = await createAppointment(payload);
-      console.log("Response:", res);
-      alert("Appointment booked successfully!");
-      setFormData({
-        name: "", sex: "", age: "", address: "", phone: "",
-        email: "", date: "", time: "", packageId: "", comments: ""
+      sessionStorage.setItem("pendingAppointmentPayload", JSON.stringify(payload));
+
+      const successUrl = `${window.location.origin}/appointment?payment=success`;
+      const cancelUrl = `${window.location.origin}/appointment?payment=cancelled`;
+
+      const session = await createStripeCheckoutSession({
+        package_id: Number(formData.packageId),
+        package_name: selectedPackage.name,
+        amount: packagePrice,
+        currency: "gbp",
+        customer_email: formData.email,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          appointment_name: formData.name,
+          appointment_date: formData.date,
+          appointment_time: formData.time,
+        },
       });
+
+      const checkoutUrl = session?.url || session?.checkout_url;
+
+      if (!checkoutUrl || !/^https:\/\/checkout\.stripe\.com\//.test(checkoutUrl)) {
+        throw new Error("Checkout session created, but redirect URL is invalid.");
+      }
+
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error(error);
-      alert("Something went wrong!");
+      sessionStorage.removeItem("pendingAppointmentPayload");
+      alert(
+        error.message ||
+        "Unable to start hosted checkout. Make sure backend endpoint /api/v1/checkout/session is implemented."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -424,7 +488,7 @@ export default function Appointment() {
             disabled={submitting || !formData.date || !formData.time}
             className="w-full py-3.5 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {submitting ? "Booking..." : "Confirm Appointment"}
+            {submitting ? "Redirecting to payment..." : "Pay & Confirm Appointment"}
           </button>
 
         </form>

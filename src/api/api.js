@@ -33,6 +33,44 @@ export const createAppointment = async (data) => {
   }
 };
 
+export const createStripeCheckoutSession = async (data) => {
+  try {
+    const configuredEndpoint = import.meta.env.VITE_STRIPE_CHECKOUT_SESSION_ENDPOINT || "/checkout/session";
+    const endpoint = configuredEndpoint.startsWith("/") ? configuredEndpoint : `/${configuredEndpoint}`;
+
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let message = `Failed to create Stripe Checkout session (HTTP ${res.status}) at ${endpoint}`;
+      try {
+        const errorText = await res.text();
+        if (errorText) {
+          try {
+            const errData = JSON.parse(errorText);
+            message = errData?.message || message;
+          } catch {
+            message = `${message}. ${errorText}`;
+          }
+        }
+      } catch {
+        // Keep fallback message if body can't be read.
+      }
+      throw new Error(message);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 
 export const baseURL = "https://www.app.sadiatherapy.org/";
 // Specific APIs
