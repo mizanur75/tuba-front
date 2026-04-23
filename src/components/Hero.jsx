@@ -35,7 +35,7 @@ export default function Hero() {
   // Video full URL
   const videoUrl = currentSlide.video
     ? baseURL + "storage/" + currentSlide.video
-    : "https://www.w3schools.com/html/mov_bbb.mp4";
+    : "https://sadiatherapy.org/video.mp4";
 
   return (
     <section className="relative h-screen min-h-[600px] overflow-hidden">
