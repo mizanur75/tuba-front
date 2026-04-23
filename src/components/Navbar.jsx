@@ -1,21 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getSettings, baseURL } from "../api/api";
+import { baseURL } from "../api/api";
 
-export default function Navbar() {
+export default function Navbar({ settings }) {
   const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useState(null);
   const location = useLocation();
 
-  useEffect(() => {
-    getSettings().then((data) => {
-      if (data && !Array.isArray(data)) {
-        setSettings(data);
-      } else if (Array.isArray(data) && data.length > 0) {
-        setSettings(data[0]);
-      }
-    });
-  }, []);
+  const siteName = settings?.site_name || "Sadia Therapy";
+  const siteTagline = settings?.site_tagline || settings?.tagline || "Solution-Focused Hypnotherapy";
+  const logoSrc = settings?.logo_url
+    || (settings?.admin_logo ? `${baseURL}storage/${settings.admin_logo}` : null)
+    || (settings?.logo ? `${baseURL}storage/${settings.logo}` : null);
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
@@ -37,9 +32,9 @@ export default function Navbar() {
 
           {/* Logo */}
           <div className="flex items-center gap-3">
-            {settings?.logo ? (
+            {logoSrc ? (
               <img
-                src={baseURL + "storage/" + settings.logo}
+                src={logoSrc}
                 alt="Logo"
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -51,10 +46,10 @@ export default function Navbar() {
             <div>
               <Link to="/" className="group">
                 <div className="text-lg font-semibold text-gray-800 group-hover:text-purple-700 transition-colors">
-                  {settings?.site_name || "Sadia Therapy"}
+                  {siteName}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {settings?.tagline || "Solution-Focused Hypnotherapy"}
+                  {siteTagline}
                 </div>
               </Link>
             </div>

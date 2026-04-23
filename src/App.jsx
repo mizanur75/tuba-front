@@ -11,8 +11,9 @@ import Footer from "./components/Footer";
 
 import Appointment from "./pages/Appointment";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { getSettings } from "./api/api";
 
 function ScrollToHash() {
   const location = useLocation();
@@ -29,7 +30,7 @@ function ScrollToHash() {
   return null;
 }
 
-function HomePage() {
+function HomePage({ settings }) {
   return (
     <>
       <Hero />
@@ -37,23 +38,54 @@ function HomePage() {
       <Steps />
       <Packages />
       <Testimonials />
-      <Contact />
+      <Contact settings={settings} />
     </>
   );
 }
 
 function App() {
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    getSettings().then((data) => {
+      if (data && typeof data === "object") {
+        setSettings(data);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const siteName = settings?.site_name;
+    const faviconUrl = settings?.favicon_url;
+
+    if (siteName) {
+      document.title = siteName;
+    }
+
+    if (faviconUrl) {
+      let favicon = document.querySelector("link[rel='icon']");
+
+      if (!favicon) {
+        favicon = document.createElement("link");
+        favicon.rel = "icon";
+        document.head.appendChild(favicon);
+      }
+
+      favicon.href = faviconUrl;
+    }
+  }, [settings]);
+
   return (
     <>
-      <Navbar />
+      <Navbar settings={settings} />
       <ScrollToHash />
 
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage settings={settings} />} />
         <Route path="/appointment" element={<Appointment />} />
       </Routes>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }

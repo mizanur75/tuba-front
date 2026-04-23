@@ -84,4 +84,12 @@ export const getVideos = () => fetchAPI("/videos");
 export const getAbout = () => fetchAPI("/about");
 export const getSteps = () => fetchAPI("/steps");
 export const getPackages = () => fetchAPI("/packages");
-export const getSettings = () => fetchAPI("/settings");
+export const getSettings = async () => {
+  const data = await fetchAPI("/settings");
+
+  if (Array.isArray(data)) {
+    return data[0] || null;
+  }
+
+  return data || null;
+};

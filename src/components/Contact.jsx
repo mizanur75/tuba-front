@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 
-export default function Contact() {
+export default function Contact({ settings }) {
 
   const [formData, setFormData] = useState({
     name: "",
@@ -42,10 +42,10 @@ export default function Contact() {
           <div className="flex flex-col gap-6">
             <div>
               <h2 className="text-3xl font-bold text-purple-700">
-                Sadia Afrin
+                {settings?.site_name || "Sadia Afrin"}
               </h2>
               <p className="text-gray-600 mt-2">
-                Master Your Mind With Solution-Focused Hypnotherapy
+                {settings?.site_tagline || "Master Your Mind With Solution-Focused Hypnotherapy"}
               </p>
             </div>
 
@@ -53,6 +53,14 @@ export default function Contact() {
               If you'd like to enquire about sessions or availability,
               send a message below or book a free discovery call.
             </p>
+
+            {(settings?.support_email || settings?.support_phone || settings?.office_address) && (
+              <div className="text-sm text-gray-600 space-y-1">
+                {settings?.support_email && <p>Email: {settings.support_email}</p>}
+                {settings?.support_phone && <p>Phone: {settings.support_phone}</p>}
+                {settings?.office_address && <p>Address: {settings.office_address}</p>}
+              </div>
+            )}
 
             <Link
               to="/appointment"
